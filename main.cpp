@@ -1,10 +1,11 @@
 #include "mbed.h"
 #include "Firebase.h"
 #include "trng_api.h"
+#include "NTPclient.h"
 
 DigitalOut led1(LED1,0);
-DigitalOut led2(LED2,0);
-DigitalOut led3(LED3,0);
+DigitalOut led2(LED1,0);
+DigitalOut led3(LED1,0);
 
 char    dataPUT[200];       // PUT data container
 char    dataPOST[200];      // POST data container
@@ -16,18 +17,23 @@ void    getRTC(),getSENSORS();
 
 int main()
 {    
-    ThisThread::sleep_for(1000);  // allow time to reset
+    ThisThread::sleep_for(100);  // allow time to reset
     printf("\033[0m\033[2J\033[H\n  ----- Firebase Example -----\r\n\n\n");
     printf("Initialise!\r\n\n");  
-    
-    // Need to set the date/time here first eg, SNTP server 
-    
+     
     // connect to the default connection access point
-    network = connect_to_default_network_interface();    
-    if (!network) {
-        printf("Cannot connect to the network, see serial output\n");
-        return 1;
-    }   
+    net = connect_to_default_network_interface();    
+   
+    // get NTP time and set RTC
+    NTPclient           ntp(*net);
+    printf("\nConnecting to NTP server..\n");    
+    //  NTP server address, timezone offset in seconds +/-, enable DST, set RTC 
+    if(ntp.getNTP("0.pool.ntp.org",0,1,1)){
+        time_t seconds = time(NULL);
+        printf("System time set by NTP: %s\n\n", ctime(&seconds));
+        }
+        else{printf("No NTP could not set RTC !!\n\n");
+        }  
     
     printf("\nConnecting TLS re-use socket...!\n\n");
     TLSSocket* socket = new TLSSocket();
@@ -47,7 +53,7 @@ int main()
                        
         if(RTCsecond%10==0){PUTdata=1;}                 // PUT 10 second counter
         if(RTCsecond==0){GETdata=1;}                    // GET minute counter
-        if(RTCminute==0 && RTCsecond==0){POSTdata=1;}   // POST hour counter                    
+        if(RTCminute==0 && RTCsecond==0){POSTdata=1;}   // POST hour counter                   
         
         if(PUTdata){    // PUT data to Firebase, initialise a data block the updates it on subsiquent PUT's
             led3=1;            
@@ -74,7 +80,7 @@ int main()
         if(GETdata){    // retrieve data from Firebase
             led2=1;            
             strcpy(FirebaseUrl, FirebaseID);                    // Firebase account ID
-            strcat(FirebaseUrl, "/Test/Current/.json?auth=");   // bit in the middle to send .json data and authority
+            strcat(FirebaseUrl, "/Mill/Current/.json?auth=");   // bit in the middle to send .json data and authority
             strcat(FirebaseUrl, FirebaseAuth);                  // Firebase account authorisation key                                     
             printf("\nGET current...  time: %s\n",timebuff);
             printf("%s \n\n",getFirebase((char*)FirebaseUrl));
@@ -88,13 +94,13 @@ void getSENSORS()
 {
     //  dummy sensor values, change these if you add real sensors eg, BME280, DS1820 etc. 
     // STM32F7 trng   
-    RCC->AHB2ENR |= RCC_AHB2ENR_RNGEN;  // Enable RNG clock source 
-    RNG->CR |= RNG_CR_RNGEN;            // RNG Peripheral enable 
-    while (!(RNG->SR & (RNG_SR_DRDY))); // Wait until one RNG number is ready 
-    int num = RNG->DR;
-    num = abs(num%100);
+    //RCC->AHB2ENR |= RCC_AHB2ENR_RNGEN;  // Enable RNG clock source 
+    //RNG->CR |= RNG_CR_RNGEN;            // RNG Peripheral enable 
+    //while (!(RNG->SR & (RNG_SR_DRDY))); // Wait until one RNG number is ready 
+    //int num = RNG->DR;
+    //num = abs(num%100);
         
-    //int num = abs(rand()%100);    
+    int num = abs(rand()%100);    
     //printf("RNG: %d\n",num);
     
     char    Temp[5][7] = {"23.80","72.50","65.00","45.30","30.60"};
