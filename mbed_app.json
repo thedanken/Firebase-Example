@@ -50,6 +50,13 @@
             "esp8266.rx"                        : "D0",
             "esp8266.provide-default"           : true
         },
+        "NUCLEO_F429ZI": {
+            "target.network-default-interface-type" : "ETHERNET",
+            "esp8266.serial-baudrate"           : 460800,
+            "esp8266.tx"                        : "D1",
+            "esp8266.rx"                        : "D0",
+            "esp8266.provide-default"           : true
+        },
         "NUCLEO_H743Z12": {
             "target.network-default-interface-type" : "ETHERNET",
             "esp8266.serial-baudrate"           : 460800,
